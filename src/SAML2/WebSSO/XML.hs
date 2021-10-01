@@ -659,7 +659,7 @@ exportRequiredIssuer = Just . exportIssuer
 --
 -- The @resp@ argument here must match the @finalize-login@ end-point (as can be constructed by
 -- 'getSsoURL').
-mkSPMetadata :: SP m => ST -> URI -> URI -> [ContactPerson] -> m SPMetadata
+mkSPMetadata :: (Monad m, SP m) => ST -> URI -> URI -> [ContactPerson] -> m SPMetadata
 mkSPMetadata nick org resp contacts = do
   mid <- createID
   now <- getNow
