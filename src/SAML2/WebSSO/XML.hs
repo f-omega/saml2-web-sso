@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
 -- FUTUREWORK: consider using http://hackage.haskell.org/package/xml-conduit-parse
 
@@ -19,6 +20,7 @@ module SAML2.WebSSO.XML
     renderTime,
     explainDeniedReason,
     mkSPMetadata,
+    testbalx,
   )
 where
 
@@ -62,7 +64,7 @@ import Text.XML
 import Text.XML.Cursor
 import Text.XML.DSig (parseKeyInfo, renderKeyInfo)
 import qualified Text.XML.HXT.Arrow.Pickle.Xml as HS
-import URI.ByteString
+import URI.ByteString as U
 import Prelude hiding (id, (.))
 
 defNameSpaces :: [(ST, ST)]
@@ -642,6 +644,17 @@ importIssuer = fmap Issuer . (nameIDToURI <=< importNameID) . HS.issuer
         ) =
         pure uri
     nameIDToURI bad = die (Proxy @Issuer) bad
+
+testbalx :: IO ()
+testbalx = do
+  let x :: Issuer
+      Right x = decodeElem z
+      Issuer (U.URI uri) = x
+      y = encodeElem x
+      z = "<Issuer xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\" xmlns:samla=\"urn:oasis:names:tc:SAML:2.0:assertion\" xmlns:samlm=\"urn:oasis:names:tc:SAML:2.0:metadata\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns=\"urn:oasis:names:tc:SAML:2.0:assertion\">http://example.com/1</Issuer>"
+  print x
+  print y
+  print (y == z)
 
 exportIssuer :: HasCallStack => Issuer -> HS.Issuer
 exportIssuer = HS.Issuer . exportNameID . entityNameID . _fromIssuer

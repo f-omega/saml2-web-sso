@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# OPTIONS_GHC -Wno-unused-binds -Wno-incomplete-patterns -Wno-incomplete-uni-patterns #-}
+{-# OPTIONS_GHC -Wno-unused-binds -Wno-incomplete-patterns -Wno-incomplete-uni-patterns -Wno-unused-imports #-}
 
 module Test.SAML2.WebSSO.XMLSpec
   ( spec,
@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy as LT
 import qualified SAML2.Core as HS
 import SAML2.Util
 import SAML2.WebSSO
+import SAML2.WebSSO.XML (testbalx)
 import qualified SAML2.XML as HS
 import Test.Hspec
 import URI.ByteString.QQ (uri)
@@ -45,7 +46,12 @@ entityFormat :: LT
 entityFormat = "urn:oasis:names:tc:SAML:2.0:nameid-format:entity"
 
 spec :: Spec
-spec = describe "XML Sanitization" $ do
+spec = do
+  focus . it "works" $ testbalx
+  spec'
+
+spec' :: Spec
+spec' = describe "XML Sanitization" $ do
   describe "decodeElem" $ do
     it "should decode a valid email" $ do
       decodeElem (xmlWithName (Just emailFormat) "somebody@example.org")
@@ -110,4 +116,3 @@ spec = describe "XML Sanitization" $ do
       -- this is good!
       HS.xmlToSAML @HS.NameID "<NameID xmlns=\"urn:oasis:names:tc:SAML:2.0:assertion\">&lt;something&gt;</NameID>"
         `shouldBe` Right (HS.simpleNameID HS.NameIDFormatUnspecified "<something>")
-

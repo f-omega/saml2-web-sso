@@ -8,7 +8,7 @@ where
 
 import Data.EitherR
 import Data.Function
-import Data.List
+import qualified Data.List
 import qualified Data.Map as Map
 import Data.Proxy
 import Data.String.Conversions
