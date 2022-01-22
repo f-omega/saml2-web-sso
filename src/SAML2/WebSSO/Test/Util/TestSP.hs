@@ -127,7 +127,7 @@ withapp ::
   IO CtxV ->
   SpecWith (CtxV, Application) ->
   Spec
-withapp proxy handler mkctx = with (mkctx <&> \ctx -> (ctx, app ctx))
+withapp proxy handler mkctx = withState (mkctx <&> \ctx -> (ctx, app ctx))
   where
     app ctx = serve proxy (hoistServer (Proxy @api) (nt @SimpleError @TestSP ctx) handler :: Server api)
 
@@ -140,10 +140,10 @@ capture' action =
 captureApplication :: HasCallStack => Application -> Application
 captureApplication app req cont = capture' (app req cont)
 
-runtest :: (CtxV -> WaiSession a) -> ((CtxV, Application) -> IO a)
-runtest test (ctx, app) = unWaiSession (test ctx) `runSession` app
+runtest :: (ctx -> WaiSession ctx a) -> ((ctx, Application) -> IO a)
+runtest test (ctx, app) = runReaderT (unWaiSession (test ctx))  ctx `runSession` app
 
-runtest' :: WaiSession a -> ((CtxV, Application) -> IO a)
+runtest' :: WaiSession ctx a -> ((ctx, Application) -> IO a)
 runtest' action = runtest (\_ctx -> action)
 
 mkTestCtxSimple :: MonadIO m => m CtxV

@@ -10,12 +10,17 @@ import Control.Concurrent.MVar
 import Control.Exception (SomeException, try)
 import Control.Lens
 import Control.Monad.Except
+import Data.ByteString (ByteString, isInfixOf)
+import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString.Base64.Lazy as EL (decodeLenient, encode)
+import Data.Char (isSpace, isPrint)
 import Data.Either
 import Data.EitherR
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Maybe (maybeToList)
 import Data.String.Conversions
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Yaml as Yaml
 import Network.Wai.Test
 import SAML2.Util
@@ -25,9 +30,29 @@ import SAML2.WebSSO.Test.Util
 import Servant
 import Test.Hspec hiding (pending)
 import Test.Hspec.Wai
-import Test.Hspec.Wai.Matcher
 import Text.XML as XML
 import URI.ByteString.QQ
+
+safeToString :: ByteString -> Maybe String
+safeToString bs = do
+  str <- either (const Nothing) (Just . T.unpack) (T.decodeUtf8' bs)
+  let isSafe = not $ case str of
+        [] -> True
+        _  -> isSpace (last str) || any (not . isPrint) str
+  guard isSafe >> return str
+
+bodyContains :: Body -> MatchBody
+bodyContains body = MatchBody (\_ actual -> bodyMatcher actual body)
+  where
+    bodyMatcher :: Body -> Body -> Maybe String
+    bodyMatcher (toStrict -> actual) (toStrict -> expected) = do
+      guard (not (expected `isInfixOf` actual))
+      let (actual_, expected_) = case (safeToString actual, safeToString expected) of
+                                   (Just x, Just y) -> (x, y)
+                                   _ -> (show actual, show expected)
+      pure $ unlines [ "body mismatch:"
+                     , "should contain: " ++ expected_
+                     , "but got:        " ++ actual_ ]
 
 spec :: Spec
 spec = describe "API" $ do
@@ -174,7 +199,7 @@ spec = describe "API" $ do
     let -- Create an AuthnRequest in the SP, then call 'mkAuthnResponse' to make an 'AuthnResponse'
         -- in the IdP, then post the 'AuthnResponse' to the appropriate SP end-point.  @spmeta@ is
         -- needed for making the 'AuthnResponse'.
-        postTestAuthnResp :: HasCallStack => CtxV -> Bool -> Bool -> WaiSession SResponse
+        postTestAuthnResp :: HasCallStack => CtxV -> Bool -> Bool -> WaiSession CtxV SResponse
         postTestAuthnResp ctxv badIdP badTimeStamp = do
           aresp <- liftIO . ioFromTestSP ctxv $ do
             (testIdPConfig, SampleIdP _ privkey _ _) <- do
