@@ -69,7 +69,6 @@ dependencies:
   - http-media >=0.8.0.0
   - http-types >=0.12.3
   - lens >=4.17.1
-  - lens-datetime >=0.3
   - memory >=0.14.18
   - mtl >=2.2.2
   - network-uri >=2.6.1.0
