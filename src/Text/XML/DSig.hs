@@ -307,7 +307,7 @@ signRootAt sigPos (SignPrivCreds hashAlg (SignPrivKeyRSA keypair)) doc =
 
     signedInfoSBS :: SBS <-
       either (throwError . show) (pure . cs) . unsafePerformIO . try @SomeException $
-        HS.applyCanonicalization (HS.signedInfoCanonicalizationMethod signedInfo) Nothing $
+        HS.canonicalize (HS.signedInfoCanonicalizationMethod signedInfo) Nothing Nothing $
           HS.samlToDoc signedInfo
     sigval :: SBS <-
       either (throwError . show @RSA.Error) pure
