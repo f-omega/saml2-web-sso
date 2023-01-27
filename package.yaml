@@ -1,5 +1,5 @@
 name:          saml2-web-sso
-version:       '0.18'
+version:       '0.19'
 synopsis:      'Library and example web app for the SAML Web-based SSO profile.'
 author:        Wire Swiss GmbH
 maintainer:    Wire Swiss GmbH <backend@wire.com>
@@ -69,7 +69,7 @@ dependencies:
   - http-media >=0.8.0.0
   - http-types >=0.12.3
   - lens >=4.17.1
-  - lens-datetime >=0.3
+#  - lens-datetime >=0.3
   - memory >=0.14.18
   - mtl >=2.2.2
   - network-uri >=2.6.1.0

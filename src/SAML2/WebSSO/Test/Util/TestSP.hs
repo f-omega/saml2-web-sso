@@ -18,7 +18,6 @@ import Data.Time
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
 import Data.Void (Void)
-import Network.Wai.Test (runSession)
 import SAML2.WebSSO as SAML
 import SAML2.WebSSO.API.Example (GetAllIdPs (..), simpleGetIdPConfigBy, simpleIsAliveID', simpleStoreID', simpleUnStoreID')
 import SAML2.WebSSO.Test.Util.Types
@@ -27,7 +26,7 @@ import System.IO
 import System.IO.Silently (hCapture)
 import Test.Hspec
 import Test.Hspec.Wai
-import Test.Hspec.Wai.Internal (unWaiSession)
+import Test.Hspec.Wai.Internal (runWaiSession)
 import Text.XML.DSig as SAML
 import URI.ByteString (pathL)
 import URI.ByteString.QQ (uri)
@@ -140,10 +139,18 @@ capture' action =
 captureApplication :: HasCallStack => Application -> Application
 captureApplication app req cont = capture' (app req cont)
 
+<<<<<<< HEAD
 runtest :: (ctx -> WaiSession ctx a) -> ((ctx, Application) -> IO a)
 runtest test (ctx, app) = runReaderT (unWaiSession (test ctx))  ctx `runSession` app
 
 runtest' :: WaiSession ctx a -> ((ctx, Application) -> IO a)
+=======
+runtest :: (CtxV -> WaiSession () a) -> (CtxV, Application) -> IO a
+runtest test (ctx, app) = runWaiSession (test ctx) app
+
+
+runtest' :: WaiSession () a -> ((CtxV, Application) -> IO a)
+>>>>>>> upstream/master
 runtest' action = runtest (\_ctx -> action)
 
 mkTestCtxSimple :: MonadIO m => m CtxV
@@ -191,7 +198,7 @@ makeIssuer = do
     (pure . Issuer)
     (SAML.parseURI' ("https://issuer.net/_" <> UUID.toText uuid))
 
-mkTestSPMetadata :: HasConfig m => m SPMetadata
+mkTestSPMetadata :: (Monad m, HasConfig m) => m SPMetadata
 mkTestSPMetadata = do
   let _spID = mkID "_4b7e1488-c0c6-11e8-aef0-9fe604f9513a"
       _spValidUntil = fromTime $ addTime (60 * 60 * 24 * 365) timeNow
